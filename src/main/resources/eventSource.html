@@ -1,0 +1,44 @@
+<html>
+	<head>
+		<script>
+			window.onload = () => {
+				let btn = document.querySelector('button');
+				let ul = document.querySelector('ul');
+				
+				let evt = new EventSource('http://localhost:9000/eventSource');
+				
+				evt.onopen = () => {
+					console.log('開啟連線');
+				}
+				
+				evt.onmessage = (d) => {
+					console.log('訊息=' + d.data);
+					
+					let emt = document.createElement('li');
+					emt.innerHTML = '預設資料=' + d.data;
+					ul.appendChild(emt);
+				}
+				
+				evt.onerror = () => {
+					console.log('連線出錯');
+				}
+				
+				evt.addEventListener('xxx', (d) => {
+					let emt = document.createElement('li');
+					emt.innerHTML = 'xxx事件資料=' + d.data;
+					ul.appendChild(emt);
+				});
+				
+				btn.onclick = () => {
+					console.log('關閉連線');
+					evt.close();
+				}
+			}
+		</script>
+	</head>
+
+	<body>
+		<button>關閉連線</button>
+		<ul></ul>
+	</body>
+</html>
