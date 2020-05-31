@@ -12,7 +12,6 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 
 @RestController
 public class HelloWebFlux {
@@ -36,7 +35,7 @@ public class HelloWebFlux {
         return Flux.interval(Duration.ofSeconds(1)).map(v -> "v2=" + v);
     }
 
-    @GetMapping("sse")
+    @RequestMapping(value = "sse", method = {RequestMethod.GET})
     public Flux<ServerSentEvent<Long>> sse() {
         return Flux.interval(Duration.ofSeconds(1)).map(v ->
                         ServerSentEvent.<Long>builder()
@@ -114,5 +113,10 @@ public class HelloWebFlux {
     @GetMapping(value = "except", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<Animal> except() {
         return null;
+    }
+
+    @PostMapping("log")
+    public Mono<Boolean> log() {
+        return Mono.just(true);
     }
 }

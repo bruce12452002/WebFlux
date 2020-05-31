@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -85,5 +86,43 @@ public class WebClientTest {
         MyException(String msg) {
             super(msg);
         }
+    }
+
+    @PostMapping("logTest")
+    public Mono<Boolean> logTest(@RequestBody Mono<Animal> mono) {
+        WebClient webClient = WebClient.builder()
+                .baseUrl("http://localhost:" + port + "/log")
+
+                // 處理 request
+                .filter(ExchangeFilterFunction.ofRequestProcessor(req -> {
+                    System.out.println("req url=" + req.url());
+                    System.out.println("req method=" + req.method());
+                    System.out.println("req logPrefix=" + req.logPrefix());
+
+                    req.headers().forEach((n, vs) -> {
+                        vs.forEach(v -> {
+                            System.out.println("req name=" + n);
+                            System.out.println("req value=" + v);
+                        });
+                    });
+                    return Mono.just(req);
+                }))
+
+                // 處理 response
+                .filter(ExchangeFilterFunction.ofResponseProcessor(res -> {
+                    System.out.println("---------------------------------");
+                    System.out.println("res logPrefix=" + res.logPrefix());
+
+                    res.headers().asHttpHeaders().forEach((n, vs) -> {
+                        vs.forEach(v -> {
+                            System.out.println("res name=" + n);
+                            System.out.println("res value=" + v);
+                        });
+                    });
+
+                    return Mono.just(res);
+                }))
+                .build();
+        return webClient.post().body(mono, Animal.class).retrieve().bodyToMono(Boolean.class);
     }
 }
